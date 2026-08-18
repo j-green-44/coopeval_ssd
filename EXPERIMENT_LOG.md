@@ -474,4 +474,17 @@ outputs/cleanup/repetition/gpt56_terra_supervisor_repetition_3_agents_seed_39_st
 - Results: pending.
 - Caveats: this is a quota-constrained, engineered mediator variant, not free-form mediator behaviour. One fixed-seed episode can establish feasibility and expose failure modes, not estimate a causal mechanism effect.
 
+## 2026-08-18 — Required-broadcast matched 200-step SWW/WWW/SSS feasibility suite
+
+- Status: completed
+- Objective: compare homogeneous weak (`WWW`), mixed strong/weak (`SWW`), and homogeneous strong (`SSS`) Cleanup populations under the same active, causal communication protocol.
+- Scope/data: three 200-step Cleanup episodes, all seed 1201, three agents, `supervisor_required_broadcast`, FFV1 review videos. `WWW` uses three `gpt-5.6-luna` agents; `SWW` uses `gpt-5.6-sol,gpt-5.6-luna,gpt-5.6-luna`; `SSS` uses three `gpt-5.6-sol` agents.
+- Method/config: each agent must broadcast the same concise immediate command to both peers each step; delivery is one simulator step later. Messages are non-binding and have no direct reward/environment effect. Policy inputs remain local and causal; dirt metrics are evaluator-only.
+- Outputs: `outputs/sol_luna_sww_required_broadcast_200step_3_agents_seed_1201_steps_200/`, `outputs/luna_www_required_broadcast_200step_3_agents_seed_1201_steps_200/`, and `outputs/sol_sss_required_broadcast_200step_3_agents_seed_1201_steps_200/`.
+- Results: all runs completed 200/200 steps with 1,200 valid outgoing messages and zero drops each. `SWW`: reward `[0,0,0]`, 87 native cleaning removals, dirt `79→74` (minimum 58). Sol made zero cleaning actions and repeatedly messaged that the Lunas should cover river cleaning while it searched for apples. `WWW`: reward `[43,0,0]`, 132 removals, dirt `79→30` (minimum 27). `SSS`: reward `[31,0,22]`, 97 removals, dirt `79→64` (minimum 38).
+- Findings: the two Lunas in `SWW` were not intrinsically unable to maintain the river: the matched `WWW` control reached a low-dirt productive state and earned 43 team reward. The mixed population instead exhibited a harmful role allocation: Sol contributed no cleaning, while the two Lunas supplied all confirmed removals but did not maintain sufficient river cleanliness to produce apples. `SSS` also produced reward, showing Sol populations can produce cleaners and harvesters; the mixed failure is therefore a population/role-allocation observation rather than evidence that Sol universally cannot clean.
+- Caveats: one episode per condition; matching seed does not control remote-model sampling. Required communication makes message volume non-emergent. Zero `SWW` reward means the run shows harmful attempted free-riding-like allocation, not realised reward capture/exploitation.
+- Decision: retain the suite as an initial feasibility comparison and use it to motivate repeated matched seeds. Do not claim a population-level causal effect yet.
+- Next action: run repeated matched seeds with rotated Sol slots and include a no-talk control, then compare cleaning share, reward share, dirt duration below threshold, and message-conditioned compliance.
+
 ...[truncated]
