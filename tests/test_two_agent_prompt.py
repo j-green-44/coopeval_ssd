@@ -11,6 +11,7 @@ from run_pi_two_agents import (
     MEDIATION_INTERVAL_STEPS,
     MINIMAL_NO_AIM_INSTRUCTIONS,
     SUPERVISOR_STRATEGY_INSTRUCTIONS,
+    build_mediation_choice_prompt,
     build_mediator_prompt,
     build_policy_prompt,
 )
@@ -76,6 +77,27 @@ class TwoAgentPromptTests(unittest.TestCase):
         self.assertNotIn("global_active_dirt_cells", prompt)
         self.assertEqual(policy_grid, grid)
 
+    def test_initial_mediation_choice_explains_voluntary_benefits_and_limits(self) -> None:
+        prompt = build_mediation_choice_prompt(was_enrolled=False, is_initial_epoch=True)
+
+        self.assertIn("voluntarily", prompt.lower())
+        self.assertIn("fairer division", prompt.lower())
+        self.assertIn("cleaning burden", prompt.lower())
+        self.assertIn("reward opportunity", prompt.lower())
+        self.assertIn("retain control of your primitive actions", prompt.lower())
+        self.assertIn("['JOIN', 'LEAVE']", prompt)
+
+    def test_initial_mediation_choice_explains_why_joining_is_rational_before_any_ledger_exists(self) -> None:
+        prompt = build_mediation_choice_prompt(was_enrolled=False, is_initial_epoch=True)
+
+        self.assertIn("first review", prompt.lower())
+        self.assertIn("join", prompt.lower())
+        self.assertIn("at least two", prompt.lower())
+        self.assertIn("50-step", prompt.lower())
+        self.assertIn("more fairly", prompt.lower())
+        self.assertIn("leave at a later review", prompt.lower())
+        self.assertIn("does not force", prompt.lower())
+
     def test_mediation_agent_and_mediator_prompts_keep_assignments_causal(self) -> None:
         grid = {"valid_actions": ["NOOP", "FIRE_CLEAN"], "agent_state": {"previous_action": "NOOP"}}
         assignment = {"epoch": 1, "role": "HARVEST", "objective": "Prioritise locally observable apples.", "start_step": 50, "end_step": 99}
@@ -93,6 +115,31 @@ class TwoAgentPromptTests(unittest.TestCase):
         self.assertIn(str(MEDIATION_INTERVAL_STEPS), mediator_prompt)
         self.assertNotIn("global_active_dirt_cells", mediator_prompt)
         self.assertNotIn("GRID_CONTEXT_JSON", mediator_prompt)
+
+    def test_quota_mediation_choice_requires_all_three_participants(self) -> None:
+        prompt = build_mediation_choice_prompt(was_enrolled=False, is_initial_epoch=True, quota_rotation=True)
+
+        self.assertIn("all three agents join", prompt)
+        self.assertIn("two CLEAN roles", prompt)
+
+    def test_two_cleaner_rotation_prompt_exposes_nonbinding_quota_assignment(self) -> None:
+        grid = {"valid_actions": ["NOOP", "FIRE_CLEAN"], "agent_state": {"previous_action": "NOOP"}}
+        assignment = {"epoch": 0, "role": "CLEAN", "objective": "Remove locally visible pollution.", "start_step": 0, "end_step": 49}
+
+        prompt, _ = build_policy_prompt(
+            "supervisor_mediation_two_cleaner_rotation",
+            grid,
+            [],
+            [],
+            mediation_assignment=assignment,
+            mediation_status={"enrolled": True},
+        )
+
+        self.assertIn("two agents receive CLEAN", prompt)
+        self.assertIn("non-binding", prompt.lower())
+        self.assertIn("MEDIATION_ASSIGNMENT_JSON", prompt)
+        self.assertIn('"role": "CLEAN"', prompt)
+        self.assertNotIn("global_active_dirt_cells", prompt)
 
 
 if __name__ == "__main__":

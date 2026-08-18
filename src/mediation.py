@@ -84,6 +84,45 @@ def validate_mediator_plan(raw: str, participants: set[int], interval_steps: int
     return {"valid": True, "assignments": sorted(normalised, key=lambda item: item["agent_index"]), "error": None}
 
 
+def build_two_cleaner_rotation_plan(
+    participants: list[int], ledger: list[dict[str, Any]], interval_steps: int
+) -> dict[str, Any]:
+    """Allocate one harvest opportunity and two clean roles by causal round-robin."""
+    ordered_participants = sorted(set(participants))
+    if len(ordered_participants) != 3 or len(ordered_participants) != len(participants):
+        return {
+            "valid": False,
+            "valid_for_steps": interval_steps,
+            "assignments": [],
+            "error": "two-cleaner rotation requires exactly three current participants",
+        }
+
+    harvest_counts = {index: 0 for index in ordered_participants}
+    for epoch in ledger:
+        for assignment in epoch.get("assignments", []):
+            index = int(assignment.get("agent_index", -1))
+            if index in harvest_counts and assignment.get("role") == "HARVEST":
+                harvest_counts[index] += 1
+    harvester = min(ordered_participants, key=lambda index: (harvest_counts[index], index))
+    assignments = [
+        {
+            "agent_index": index,
+            "role": "HARVEST" if index == harvester else "CLEAN",
+            "objective": (
+                "Prioritize locally observable apples while they are available."
+                if index == harvester
+                else "Prioritize locally visible pollution removal to restore the shared river."
+            ),
+            "fairness_basis": (
+                f"Deterministic rotation: agent {harvester} has the fewest prior HARVEST intervals "
+                f"({harvest_counts[harvester]}), with agent index as the tie-breaker."
+            ),
+        }
+        for index in ordered_participants
+    ]
+    return {"valid": True, "valid_for_steps": interval_steps, "assignments": assignments, "error": None}
+
+
 def close_epoch(epoch: dict[str, Any], end_step: int, outcomes: dict[int, dict[str, Any]]) -> dict[str, Any]:
     """Close a completed mediated interval and preserve role/outcome attribution."""
     assignments = epoch.get("assignments", [])

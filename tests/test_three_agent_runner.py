@@ -23,6 +23,13 @@ class ThreeAgentRunnerTests(unittest.TestCase):
         self.assertIn('"provider": provider', source)
         self.assertIn('"model": model', source)
 
+    def test_runner_accepts_per_agent_model_assignments(self) -> None:
+        source = (Path(__file__).resolve().parents[1] / "src" / "run_pi_two_agents.py").read_text()
+        self.assertIn("agent_models: list[str] | None", source)
+        self.assertIn("agent_models[index]", source)
+        self.assertIn('parser.add_argument("--agent-models"', source)
+        self.assertIn('"model": agent_models[index]', source)
+
     def test_runner_pins_env_seed_and_logs_clean_events(self) -> None:
         source = (Path(__file__).resolve().parents[1] / "src" / "run_pi_two_agents.py").read_text()
         self.assertIn("build_cleanup(agent_count, env_seed=seed)", source)

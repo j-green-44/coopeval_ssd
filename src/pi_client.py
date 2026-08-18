@@ -36,6 +36,13 @@ def raise_for_pi_error(error: subprocess.CalledProcessError) -> None:
     raise RuntimeError(f"Pi provider request failed: {detail}") from error
 
 
+def prepare_session_file(session_path: Path) -> Path:
+    """Create the Pi session file before invoking Pi on a new rotation."""
+    session_path.parent.mkdir(parents=True, exist_ok=True)
+    session_path.touch(exist_ok=True)
+    return session_path
+
+
 def decide(
     session_path: Path,
     prompt: str,
@@ -47,6 +54,7 @@ def decide(
 ) -> tuple[str, float]:
     import time
     started = time.perf_counter()
+    session_path = prepare_session_file(session_path)
     try:
         result = subprocess.run(
             build_pi_command(

@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from mediation import (
+    build_two_cleaner_rotation_plan,
     close_epoch,
     parse_mediation_choice,
     participant_fairness_summary,
@@ -118,6 +119,33 @@ class MediationTests(unittest.TestCase):
                 {"agent_index": 2, "mediated_intervals": 2, "clean_intervals": 0, "harvest_intervals": 1, "flex_intervals": 1, "reward_while_mediated": 21.0, "confirmed_clean_removals_while_mediated": 4, "last_assigned_role": "FLEX"},
             ],
         )
+
+    def test_two_cleaner_rotation_assigns_exactly_two_cleaners_and_one_harvester(self) -> None:
+        plan = build_two_cleaner_rotation_plan(participants=[0, 1, 2], ledger=[], interval_steps=50)
+
+        self.assertTrue(plan["valid"])
+        self.assertEqual(
+            {item["agent_index"]: item["role"] for item in plan["assignments"]},
+            {0: "HARVEST", 1: "CLEAN", 2: "CLEAN"},
+        )
+        self.assertEqual(plan["valid_for_steps"], 50)
+
+    def test_two_cleaner_rotation_gives_next_harvest_interval_to_least_served_agent(self) -> None:
+        ledger = [
+            {
+                "epoch": 0,
+                "assignments": [
+                    {"agent_index": 0, "role": "HARVEST"},
+                    {"agent_index": 1, "role": "CLEAN"},
+                    {"agent_index": 2, "role": "CLEAN"},
+                ],
+            }
+        ]
+
+        plan = build_two_cleaner_rotation_plan(participants=[0, 1, 2], ledger=ledger, interval_steps=50)
+
+        self.assertTrue(plan["valid"])
+        self.assertEqual({item["agent_index"]: item["role"] for item in plan["assignments"]}[1], "HARVEST")
 
 
 if __name__ == "__main__":

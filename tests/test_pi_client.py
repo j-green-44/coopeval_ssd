@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from pi_client import build_pi_command, decide, raise_for_pi_error
+from pi_client import build_pi_command, decide, prepare_session_file, raise_for_pi_error
 
 
 class PiClientTests(unittest.TestCase):
@@ -39,6 +40,16 @@ class PiClientTests(unittest.TestCase):
         self.assertIn("--no-skills", command)
         self.assertIn("--system-prompt", command)
         self.assertIn("--print", command)
+
+    def test_rotated_session_file_is_created_before_pi_uses_it(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            session = Path(tmp) / "agent_sessions" / "context_003.jsonl"
+
+            prepared = prepare_session_file(session)
+
+            self.assertEqual(prepared, session)
+            self.assertTrue(session.is_file())
+            self.assertEqual(session.read_text(), "")
 
     def test_provider_error_reports_stderr_without_echoing_the_prompt(self) -> None:
         error = subprocess.CalledProcessError(1, ["pi", "--print", "sensitive prompt"], stderr="Codex overloaded")
