@@ -74,10 +74,13 @@ def validate_mediator_plan(raw: str, participants: set[int], interval_steps: int
     roles = {item["role"] for item in normalised}
     if len(participants) == 2 and roles != {"CLEAN", "HARVEST"}:
         return {"valid": False, "assignments": [], "error": "two participants require exactly CLEAN and HARVEST assignments"}
-    if len(participants) == 3 and roles != {"CLEAN", "HARVEST", "FLEX"}:
-        return {"valid": False, "assignments": [], "error": "three participants require exactly CLEAN, HARVEST and FLEX assignments"}
-    if len(participants) > 3:
-        return {"valid": False, "assignments": [], "error": "version 1 mediation supports at most three participants"}
+    if len(participants) >= 3:
+        if not {"CLEAN", "HARVEST"}.issubset(roles) or any(item["role"] not in {"CLEAN", "HARVEST", "FLEX"} for item in normalised):
+            return {"valid": False, "assignments": [], "error": "three or more participants require CLEAN, HARVEST and FLEX-only remaining assignments"}
+        if sum(item["role"] == "CLEAN" for item in normalised) != 1 or sum(item["role"] == "HARVEST" for item in normalised) != 1:
+            return {"valid": False, "assignments": [], "error": "three or more participants require exactly one CLEAN and one HARVEST assignment"}
+        if len(participants) > 2 and sum(item["role"] == "FLEX" for item in normalised) != len(participants) - 2:
+            return {"valid": False, "assignments": [], "error": "all remaining participants must receive FLEX assignments"}
     return {"valid": True, "assignments": sorted(normalised, key=lambda item: item["agent_index"]), "error": None}
 
 
