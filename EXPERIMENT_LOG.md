@@ -277,3 +277,18 @@
 - Behavioural reading: the initial two-maintainer/one-harvester pattern shifted part way through: agent 0 harvested 23 after contributing early cleaning, while agent 1 became the persistent zero-reward maintainer. The partner-history condition therefore reduced—but did not remove—reward concentration and did not establish equitable reciprocal role rotation.
 - Decision: the repetition mechanism is operational and produces a meaningful behavioural change, but this single rollout does not show improved cooperative performance overall. Treat it as a feasibility result; repeat matched seeds before a mechanism claim. The next CoopEval family to implement should be reputation, using the same causal contribution ledger but a transparent rolling contribution score.
 - Caveats: do not interpret a single seed as evidence that the repetition mechanism improves cooperation or fairness; environment seed is fixed but remote-model responses may vary between rollouts.
+
+## 2026-08-18 — CoopEval mediation: opt-in high-level role allocation
+
+- Status: planned
+- Objective: evaluate third-party mediation without centralising primitive Cleanup control. Agents may voluntarily join mediation at 50-step review epochs; the mediator assigns only participant high-level roles (`CLEAN`, `HARVEST`, or `FLEX`).
+- Hypothesis: retaining a complete causal assignment/outcome ledger lets the mediator rotate cleaning burden and reward opportunity more fairly than partner history alone, without reducing individual agents to puppets.
+- Scope/data: planned fixed-seed 30-step plumbing smoke, then 100-step ledger/second-epoch validation before any 300-step run; three agents; local symbolic observations; lossless FFV1 review video.
+- Method/config: `supervisor_mediation` retains the supervisor strategy and 12-step causal partner-history record. At each review every agent returns a structured `JOIN`/`CONTINUE`/`LEAVE` choice. With two or more participants, the mediator receives the complete prior mediation ledger — assignments, realised reward, and native `player_cleaned` counts — plus a derived per-participant fairness summary. It can assign current participants only. The mediator receives no grid, global dirt telemetry, global position, current-step action, or future outcome.
+- Code state: not versioned. Implementation added `src/mediation.py`, `tests/test_mediation.py`, and `supervisor_mediation` support in `src/run_pi_two_agents.py`; full test suite passed (30 tests) after implementation.
+- Command: `source /home/jack/phd/meltingpot/.venv-train/bin/activate && PYTHONPATH=/home/jack/phd/meltingpot:/home/jack/phd/meltingpot/.venv311/lib/python3.11/site-packages:/home/jack/phd/cleanup_grid_context_llm/src:/home/jack/phd/meltingpot/meltingpot_semantic_dataset/src:/home/jack/phd/tiny_cooperative_vlm/src python src/run_pi_two_agents.py --seed 39 --agents 3 --steps 30 --record-video --provider openai-codex --model gpt-5.6-terra --run-label gpt56_terra_supervisor_mediation_smoke --policy-mode supervisor_mediation --output outputs`
+- Outputs: planned `outputs/gpt56_terra_supervisor_mediation_smoke_3_agents_seed_39_steps_30/`.
+- Results: not run.
+- Caveats: a 30-step smoke cannot test a role rotation because the first 50-step assignment interval has not completed. Require a 100-step validation to prove that the step-50 mediator request includes the full epoch-0 assignment ledger and outcomes, and that assignments remain participant-only.
+- Decision: implementation is ready for smoke validation; do not launch the longer remote-model run without reviewing the smoke and 100-step ledger validation.
+- Next action: run the 30-step smoke and inspect serialized mediator/agent prompts, then request approval for the 100-step validation.
