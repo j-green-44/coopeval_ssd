@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node.js
+node_modules/
+agent_harness/node_modules/
+npm-debug.log*
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Generated experiment artifacts and local working metadata
+outputs/
+.hermes/
+
+# Keep data documentation, but never commit local datasets by default
+data/*
+!data/README.md
+!data/.gitkeep
+
+# OS/editor files
+.DS_Store
+.vscode/
+.idea/
